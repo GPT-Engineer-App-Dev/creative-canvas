@@ -1,6 +1,9 @@
-import { Box, Container, Flex, Text, VStack, HStack, Spacer, Link } from "@chakra-ui/react";
+import { Box, Container, Flex, Text, VStack, HStack, Spacer, Link, Table, Thead, Tbody, Tr, Th, Td, Spinner, Alert, AlertIcon } from "@chakra-ui/react";
+import { useEvents } from "../api/supabase";
 
 const Index = () => {
+  const { data: events, error, isLoading } = useEvents();
+
   return (
     <Box>
       {/* Navigation Bar */}
@@ -22,6 +25,37 @@ const Index = () => {
           <Text fontSize="4xl" fontWeight="bold">Welcome to MyWebsite</Text>
           <Text fontSize="lg" textAlign="center">This is a placeholder for the main content. Use this space to introduce your website and engage your visitors.</Text>
         </VStack>
+      </Container>
+
+      {/* Events Table */}
+      <Container maxW="container.lg" py={8}>
+        {isLoading ? (
+          <Spinner size="xl" />
+        ) : error ? (
+          <Alert status="error">
+            <AlertIcon />
+            {error.message}
+          </Alert>
+        ) : (
+          <Table variant="simple">
+            <Thead>
+              <Tr>
+                <Th>Name</Th>
+                <Th>Date</Th>
+                <Th>Description</Th>
+              </Tr>
+            </Thead>
+            <Tbody>
+              {events.map((event) => (
+                <Tr key={event.id}>
+                  <Td>{event.name}</Td>
+                  <Td>{event.date}</Td>
+                  <Td>{event.description}</Td>
+                </Tr>
+              ))}
+            </Tbody>
+          </Table>
+        )}
       </Container>
 
       {/* Footer */}
