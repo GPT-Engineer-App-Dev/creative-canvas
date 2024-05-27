@@ -1,8 +1,25 @@
-import { Box, Container, Flex, Text, VStack, HStack, Spacer, Link, Table, Thead, Tbody, Tr, Th, Td, Spinner, Alert, AlertIcon } from "@chakra-ui/react";
-import { useEvents } from "../api/supabase";
+import { Box, Container, Flex, Text, VStack, HStack, Spacer, Link, Table, Thead, Tbody, Tr, Th, Td, Spinner, Alert, AlertIcon, Button, Input, FormControl, FormLabel } from "@chakra-ui/react";
+import { useEvents, useAddEvent, useDeleteEvent } from "../api/supabase";
+import { useState } from "react";
 
 const Index = () => {
   const { data: events, error, isLoading } = useEvents();
+  const addEventMutation = useAddEvent();
+  const deleteEventMutation = useDeleteEvent();
+
+  const [newEvent, setNewEvent] = useState({ name: '', date: '', description: '' });
+
+  const handleAddEvent = () => {
+    addEventMutation.mutate(newEvent, {
+      onSuccess: () => {
+        setNewEvent({ name: '', date: '', description: '' });
+      },
+    });
+  };
+
+  const handleDeleteEvent = (id) => {
+    deleteEventMutation.mutate(id);
+  };
 
   return (
     <Box>
@@ -27,6 +44,31 @@ const Index = () => {
         </VStack>
       </Container>
 
+      {/* Add Event Form */}
+      <Container maxW="container.md" py={8}>
+        <VStack spacing={4} as="form" onSubmit={(e) => { e.preventDefault(); handleAddEvent(); }}>
+          <FormControl id="name">
+            <FormLabel>Name</FormLabel>
+            <Input type="text" value={newEvent.name} onChange={(e) => setNewEvent({ ...newEvent, name: e.target.value })} />
+          </FormControl>
+          <FormControl id="date">
+            <FormLabel>Date</FormLabel>
+            <Input type="date" value={newEvent.date} onChange={(e) => setNewEvent({ ...newEvent, date: e.target.value })} />
+          </FormControl>
+          <FormControl id="description">
+            <FormLabel>Description</FormLabel>
+            <Input type="text" value={newEvent.description} onChange={(e) => setNewEvent({ ...newEvent, description: e.target.value })} />
+          </FormControl>
+          <Button type="submit" colorScheme="blue" isLoading={addEventMutation.isLoading}>Add Event</Button>
+          {addEventMutation.error && (
+            <Alert status="error">
+              <AlertIcon />
+              {addEventMutation.error.message}
+            </Alert>
+          )}
+        </VStack>
+      </Container>
+
       {/* Events Table */}
       <Container maxW="container.lg" py={8}>
         {isLoading ? (
@@ -43,6 +85,7 @@ const Index = () => {
                 <Th>Name</Th>
                 <Th>Date</Th>
                 <Th>Description</Th>
+                <Th>Actions</Th>
               </Tr>
             </Thead>
             <Tbody>
@@ -51,6 +94,9 @@ const Index = () => {
                   <Td>{event.name}</Td>
                   <Td>{event.date}</Td>
                   <Td>{event.description}</Td>
+                  <Td>
+                    <Button colorScheme="red" onClick={() => handleDeleteEvent(event.id)} isLoading={deleteEventMutation.isLoading}>Delete</Button>
+                  </Td>
                 </Tr>
               ))}
             </Tbody>
